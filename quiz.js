@@ -4,10 +4,7 @@ let answers = JSON.parse(localStorage.getItem("quizAnswers")) || new Array(total
 let timerDuration = 2 * 60 * 60; // 2 hours in seconds
 let timerInterval;
 let tabSwitchCount = 0;
-let originalWidth = window.innerWidth;
-let originalHeight = window.innerHeight;
-let resizeCount = 0;
-const maxResizeWarnings = 3; // Minimum height allowed
+ // Minimum height allowed
 let violationCount = 0; // Unified counter for tab switch + resize
 const maxViolations = 1; // Max allowed violations before auto-submission
 // Questions & Notes Data
@@ -217,44 +214,7 @@ document.addEventListener("keydown", (event) => {
     }
 });
 
-// **Detect Split Screen or Window Resize**
-function checkResize() {
-    let currentWidth = window.visualViewport.width;
-    let currentHeight = window.visualViewport.height;
 
-    // Calculate the percentage change
-    let widthChange = (currentWidth / originalWidth) * 100;
-    let heightChange = (currentHeight / originalHeight) * 100;
-
-    console.log(`Width: ${widthChange.toFixed(2)}% | Height: ${heightChange.toFixed(2)}%`);
-
-    // Detect split-screen mode properly
-    let isSplitScreen = widthChange < 70 || heightChange < 70;
-
-    // Ignore small orientation-based changes
-    if (isSplitScreen && Math.abs(originalWidth - originalHeight) > 250) {
-        resizeCount++;
-        alert(`Warning! Your screen size is too small (${resizeCount}/${maxResizeWarnings} warnings).`);
-
-        if (resizeCount >= maxResizeWarnings) {
-            alert("You have resized the window too many times. Your quiz is being submitted.");
-            submitQuiz();
-        }
-    }
-}
-
-// Listen for resize events
-window.addEventListener("resize", checkResize);
-window.addEventListener("orientationchange", () => {
-    setTimeout(checkResize, 700);
-});
-
-// Extra: Detect split-screen changes using matchMedia
-window.matchMedia("(max-width: 600px)").addEventListener("change", (e) => {
-    if (e.matches) {
-        checkResize();
-    }
-});
 
 // **Attach Event Listeners**
 document.addEventListener("DOMContentLoaded", () => {
