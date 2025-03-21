@@ -5,8 +5,9 @@ let timerDuration = 2 * 60 * 60; // 2 hours in seconds
 let timerInterval;
 let tabSwitchCount = 0;
 let resizeCount = 0;
-const minWidth = 800;  // Minimum width allowed for the quiz
-const minHeight = 600; // Minimum height allowed
+const maxResizeWarnings = 3;
+let originalWidth = Math.max(window.screen.width, window.screen.height); // Handle portrait & landscape modes
+let originalHeight = Math.min(window.screen.width, window.screen.height); // Minimum height allowed
 let violationCount = 0; // Unified counter for tab switch + resize
 const maxViolations = 1; // Max allowed violations before auto-submission
 // Questions & Notes Data
@@ -217,16 +218,36 @@ document.addEventListener("keydown", (event) => {
 });
 
 // **Detect Split Screen or Window Resize**
-window.addEventListener("resize", () => {
-    if (window.innerWidth < minWidth || window.innerHeight < minHeight) {
-        resizeCount++;
-        alert(`Warning! Your window size is too small. (${resizeCount}/3 warnings)`);
+function checkResize() {
+    let currentWidth = window.innerWidth;
+    let currentHeight = window.innerHeight;
 
-        if (resizeCount >= 3) {
+    // Calculate how much the width & height have changed in percentage
+    let widthChange = (currentWidth / originalWidth) * 100;
+    let heightChange = (currentHeight / originalHeight) * 100;
+
+    console.log(`Width: ${widthChange}% | Height: ${heightChange}%`);
+
+    // ✅ TRIGGER WARNING ONLY IF:
+    // - Width or height shrinks below 70% of the original screen size
+    // - The change is NOT just a normal screen rotation
+    if ((widthChange < 70 || heightChange < 70) && Math.abs(originalWidth - originalHeight) > 250) {
+        resizeCount++;
+        alert(`Warning! Your screen size is too small (${resizeCount}/${maxResizeWarnings} warnings).`);
+
+        if (resizeCount >= maxResizeWarnings) {
             alert("You have resized the window too many times. Your quiz is being submitted.");
             submitQuiz();
         }
     }
+}
+
+// ✅ Listen for screen resize events
+window.addEventListener("resize", checkResize);
+
+// ✅ Also check when the device orientation changes (for mobile & tablets)
+window.addEventListener("orientationchange", () => {
+    setTimeout(checkResize, 700); // Small delay to allow screen size stabilization
 });
 
 // **Attach Event Listeners**
